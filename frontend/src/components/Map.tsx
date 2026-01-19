@@ -307,25 +307,42 @@ export function Map() {
     }, [regions, ethnicity]);
 
     return (
-        <div className ="h-full w-full relative " >
+        <div className ="h-full w-full relative" >
 
             {selectedRegion==="" ? <></> :
             (
-                <div className= " absolute bottom-10 w-full  flex ">
-                    <div className="flex-1 text-center bg-gray-600/75 ml-50 mr-50 rounded-xl m-auto p-5 text-gray-100">
-                        <h1 className="flex-1 text-center text-3xl ">{selectedRegion}</h1>
-                        { selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (<div className="font-lg font-medium">
-                            <p>NZ European: { ((selectedRegionEthnicity.nz_european / selectedRegionEthnicity.total) * 100).toFixed(2) }% </p>
-                            <p>Māori: { ((selectedRegionEthnicity.māori / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                            <p>Asian: { ((selectedRegionEthnicity.asian / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                            <p>Pasifika: { ((selectedRegionEthnicity.pasifika / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                            <p>MENA: { ((selectedRegionEthnicity.mena / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                            <p>Other: { ((selectedRegionEthnicity.other / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                        </div>) }
+                <>
+                    <div className= " absolute bottom-10 w-full hidden md:flex">
+                        <div className="flex-1 text-center bg-gray-600/75 ml-50 mr-50 rounded-xl m-auto p-5 text-gray-100">
+                            <h1 className="flex-1 text-center text-3xl ">{selectedRegion}</h1>
+                            { selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (<div className="font-lg font-medium">
+                                <p>NZ European: { ((selectedRegionEthnicity.nz_european / selectedRegionEthnicity.total) * 100).toFixed(2) }% </p>
+                                <p>Māori: { ((selectedRegionEthnicity.māori / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
+                                <p>Asian: { ((selectedRegionEthnicity.asian / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
+                                <p>Pasifika: { ((selectedRegionEthnicity.pasifika / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
+                                <p>MENA: { ((selectedRegionEthnicity.mena / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
+                                <p>Other: { ((selectedRegionEthnicity.other / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
+                            </div>) }
+                            
+                        </div>
                         
                     </div>
-                    
-                </div>
+                    <div className= " absolute bottom-0 w-full md:hidden bg-red-100">
+                        <div className="flex-1 text-center bg-gray-600/75  m-auto p-5 text-gray-100">
+                            <h1 className="flex-1 text-center text-lg ">{selectedRegion}</h1>
+                            { selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (<div className="font-lg font-medium">
+                                Euro: { ((selectedRegionEthnicity.nz_european / selectedRegionEthnicity.total) * 100).toFixed(2) }% 
+                                Māori: { ((selectedRegionEthnicity.māori / selectedRegionEthnicity.total) * 100).toFixed(2) }% 
+                                Asian: { ((selectedRegionEthnicity.asian / selectedRegionEthnicity.total) * 100).toFixed(2) }%
+                                Pasifika: { ((selectedRegionEthnicity.pasifika / selectedRegionEthnicity.total) * 100).toFixed(2) }%
+                                MENA: { ((selectedRegionEthnicity.mena / selectedRegionEthnicity.total) * 100).toFixed(2) }%
+                                Other: { ((selectedRegionEthnicity.other / selectedRegionEthnicity.total) * 100).toFixed(2) }%
+                            </div>) }
+                            
+                        </div>
+                        
+                    </div>
+                </>
             )}
 
             {<div className= " absolute left-0 ">

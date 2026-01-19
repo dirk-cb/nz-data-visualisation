@@ -13,7 +13,7 @@ export default function App() {
   return (
     
     <>
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-dvh md:h-screen">
         <Header onShowAbout={setDisplayAbout}/>
        
         <div className="flex-1 min-h-0 ">

@@ -165,8 +165,6 @@ export function Map() {
 
     useEffect(() => {
 
-        console.log(55)
-
         const current_xform = d3.zoomTransform(mapRef.current as any).k
         d3.select(gRef.current)
             .selectAll("path")
@@ -174,7 +172,6 @@ export function Map() {
 
         
         if (mouseCoord.x!=0 && mouseCoord.y!=0) {
-            console.log(mouseCoord)
 
             const point = (mapRef.current as any).createSVGPoint()
 

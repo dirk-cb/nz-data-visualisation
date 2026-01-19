@@ -29,6 +29,7 @@ export function Map() {
 
     const [ethnicity, setEthnicity] = useState("Asian");
 
+
     const regions = useMemo(() => {
         return (nz_region_with_ethnicity_data as FeatureCollection)
             .features
@@ -152,25 +153,93 @@ export function Map() {
 
 
 
+  
+    const [mouseCoord, setMouseCoord] = useState({ x: 0, y: 0 });
 
-    const regionPathsSA3 = useMemo(() => {
+    const updateMouse = (e: any) => {
+        setMouseCoord({ x: e.clientX, y: e.clientY });
+    };
 
-        return sa3.map((region, i) => (
-            <path
-            key={i}
-            d={pathGenerator(region) ?? undefined}
-            fill={renderEthnicityColour((region as any).properties as any)}
-            //stroke={(region as any).properties.name == selectedRegion ? "var(--color-black)" : "var(--color-gray-500)"}
-            stroke= "var(--color-gray-500)"
-            strokeWidth="0.025"     
-           //fill="white"
-            onMouseEnter={(e)=>updateRegion((region as any), e)}
-            onMouseLeave={(e)=>removeRegion((region as any).properties.name, e)}
-            />
-        ));
-    }, [sa3, ethnicity]);
-    // selectedRegion
 
+
+
+    useEffect(() => {
+
+        console.log(55)
+
+        const current_xform = d3.zoomTransform(mapRef.current as any).k
+        d3.select(gRef.current)
+            .selectAll("path")
+            .attr("stroke-width", 0.5 / current_xform);
+
+        
+        if (mouseCoord.x!=0 && mouseCoord.y!=0) {
+            console.log(mouseCoord)
+
+            const point = (mapRef.current as any).createSVGPoint()
+
+            point.x = mouseCoord.x
+            point.y = mouseCoord.y
+
+            d3
+                .select(gRef.current)
+                .selectAll("path")
+                .filter(function() {
+                    const matrix = (this as SVGPathElement).getScreenCTM();
+                    if (!matrix)
+                        return false
+                    const localPoint = point.matrixTransform(matrix.inverse());
+                    return (this as SVGPathElement).isPointInFill(localPoint);
+                    
+                    
+                })
+                .attr("stroke", "black")
+                .attr("stroke-width", 0.5/8)
+                .raise()
+                /*
+
+                */
+
+        }
+            
+        
+    }, [regionLevel]);
+
+
+    const updateRegion = (region: any, event: any) => {
+
+        const new_region = event.target;
+
+        const current_xform = d3.zoomTransform(mapRef.current as any).k
+
+        d3.select(new_region.parentNode)
+            .selectAll("path")
+            .attr("stroke", "var(--color-gray-400)")
+            .attr("stroke-width", 0.5 / current_xform);
+
+        d3.select(new_region).raise() // Show it first
+        d3.select(new_region)
+            .attr("stroke",  "black")
+            .attr("stroke-width", 1 / current_xform) // 2
+        
+        
+        setSelectedRegion(region.properties.name)
+        setSelectedRegionEthnicity(region.properties.ethnicity)
+
+    }
+
+
+
+    const removeRegion = (name: string, event: any) => {
+
+        const current_xform = d3.zoomTransform(mapRef.current as any).k
+
+        if (name == selectedRegion)
+            setSelectedRegion("")
+        d3.select(event.target)
+            .attr("stroke",  "var(--color-gray-400)")
+            .attr("stroke-width", 0.5 / current_xform)
+    }
 
 
     useEffect(() => {
@@ -187,43 +256,62 @@ export function Map() {
                 } else {
                     setRegionLevel(2)
                 }
+
+                //const current_xform = d3.zoomTransform(mapRef.current as any).k
                 
                 g.attr("transform", event.transform);
+                //g.selectAll("path").attr("stroke-width", 0.5 / current_xform);
 
-
-            });
+            })
 
         svg.call((zoomBehavior as any));
     }, []);
 
+    
+    const regionPathsSA3 = useMemo(() => {
 
-    const updateRegion = (region: any, event: any) => {
+        //const current_xform = d3.zoomTransform(mapRef.current as any).k
+
+        return sa3.map((region: any, i: number) => (
+            <path
+            className="transition-[fill] duration-[500ms] ease-in-out"
+            
+            
+            key={i}
+            d={pathGenerator(region) ?? undefined}
+            fill={renderEthnicityColour((region as any).properties as any)}
+
+
+            stroke= "var(--color-gray-400)"
+            strokeWidth="0.0625"    
+    
+            onMouseEnter={(e)=>updateRegion((region as any), e)}
+            onMouseLeave={(e)=>removeRegion((region as any).properties.name, e)}
+            />
+        ));
+    }, [sa3, ethnicity]);
+
         
-        const new_region = event.target;
-        d3.select(new_region.parentNode)
-            .selectAll("path")
-            .attr("stroke", "gray");
+    const regionPathsRegion = useMemo(() => {
 
-        d3.select(new_region).raise() // Show it first
-        d3.select(new_region).attr("stroke",  "black")
-        
-        setSelectedRegion(region.properties.name)
-        setSelectedRegionEthnicity(region.properties.ethnicity)
-
-    }
-
-    const removeRegion = (name: string, event: any) => {
-
-        if (name == selectedRegion)
-            setSelectedRegion("")
-        d3.select(event.target).attr("stroke",  "var(--color-gray-500)")
-    }
-
-
-
+        return regions.map((region: any, i: number) => (    
+            <path 
+                className=""
+                cursor="pointer"
+                strokeWidth="0.5"
+                stroke="var(--color-gray-400)"
+                fill={renderEthnicityColour((region.properties as any))}
+                key={region.id ?? i}
+                d={pathGenerator(region) ?? undefined}
+                onMouseEnter={(e)=>updateRegion(region, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
+            />
+        ));
+    }, [regions, ethnicity]);
 
     return (
-        <div>
+        <div className ="h-full w-full relative " >
+
             {selectedRegion==="" ? <></> :
             (
                 <div className= " absolute bottom-10 w-full  flex ">
@@ -243,32 +331,21 @@ export function Map() {
                 </div>
             )}
 
-            <div className= " absolute left-0 h-full flex flex-col">
-                    <div className="flex-1 text-center mt-20 mb-100 bg-gray-600/100 ml-5 rounded-xl m-auto p-5 text-gray-100">
-                        <h1 className="flex-1 text-center text-2xl ">Select an ethnicity</h1> 
-                        <select className="bg-gray-100 text-black p-2 rounded-lg" onChange={(v)=>setEthnicity(v.target.value)}>
+            {<div className= " absolute left-0 ">
+                    <div className="mt-5 bg-gray-600/100 ml-5 rounded-xl px-5 pt-3 pb-6 text-gray-100">
+                        <h1 className="text-center text-xl pb-2">Choose a demographic</h1> 
+
+                        <select className="bg-gray-100 text-black p-2 rounded-lg w-full " onChange={(v)=>setEthnicity(v.target.value)}>
                             {ethnicities.map((val)=>(<option value={val} key={val} >{val}</option>))}
                         </select>
                     </div>
-            </div>
+            </div>}
 
-            <div className="h-screen bg-gray-100 cursor-grab active:cursor-grabbing"  >
+            <div className="h-full bg-gray-100 cursor-grab active:cursor-grabbing" onMouseMove={updateMouse}>
             
-                <svg ref={mapRef} viewBox="0 0 975 610" height="100%" width="100%" shapeRendering="geometricPrecision"> 
-                    <g  className=""  ref={gRef}>
-                        { regionLevel == 1 &&
-                            regions.map((region: any, i: number) => (
-                            <path className=""
-                                    cursor="pointer"
-                                    strokeWidth="1" 
-                                    stroke="var(--color-gray-500)"
-                                    fill={renderEthnicityColour((region.properties as any))}
-                                    key={region.id ?? i}
-                                    d={pathGenerator(region) ?? undefined}
-                                    onMouseEnter={(e)=>updateRegion(region, e)}
-                                    onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
-                                />
-                        ))}
+                <svg className="" ref={mapRef} viewBox="0 0 975 610" height="100%" width="100%" > 
+                    <g ref={gRef} >
+                        { regionLevel == 1 && regionPathsRegion }
                         { regionLevel == 2 && regionPathsSA3} 
                     </g>
                 </svg>
@@ -280,3 +357,4 @@ export function Map() {
     )
 
 }
+

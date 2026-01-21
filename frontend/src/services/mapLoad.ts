@@ -8,8 +8,12 @@ const FILENAMES = ["region", "territorial", "sa3", "sa2"]
 const fetchCensusData = async (filename: string): Promise<any[]> => {
     
     const url = `${BASE_PATH}/data/${filename}.parquet`.replace(/\/+/g, '/');
+
     
     const file = await asyncBufferFromUrl({ url });
+
+    console.log(file)
+
     return await parquetReadObjects({ file });
 }
 

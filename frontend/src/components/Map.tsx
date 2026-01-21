@@ -1,23 +1,27 @@
-
 //import { useMemo } from "react";
 import {useRef, useState, useEffect, useMemo } from 'react';
 import { geoPath, geoMercator } from "d3-geo"; // type GeoPermissibleObjects
-
-import { type FeatureEthnicity, type Demographics, type Stats } from "../domain/FeatureEthnicity"
+//import { type FeatureCollection } from "geojson";
+import { type FeatureCollectionEthnicity, type FeatureEthnicity, type Demographics, type Stats } from "../domain/FeatureEthnicity"
 import * as d3 from "d3";
 import "d3-zoom";
-import data_max_pct from  "../../public/data/max_pct_by_area.json";
+import data_region from  "../../../data-api/data/area_ethnicity/region.json";
+import data_territorial from  "../../../data-api/data/area_ethnicity/territorial.json";
+import data_sa3 from  "../../../data-api/data/area_ethnicity/sa3.json";
+import data_sa2 from  "../../../data-api/data/area_ethnicity/sa2.json";
+import data_max_pct from  "../../../data-api/data/area_ethnicity/max_pct_by_area.json";
 
-export function Map({data}: any) {
+export function Map() {
 
-    
     const ethnicities = useMemo(
         () => ["Asian", "European", "MENA", "Māori", "Pasifika", "Other", "LGBT", "No Religion", "Christian", "Islam", "Judaism"],
         []
     );
 
+
+
     type EthnicityLabel = (typeof ethnicities)[number];
-    type DemoValue = { [K in keyof Demographics]: Demographics[K] extends Stats ? K : never}[keyof Demographics] & string
+    type DemoValue = { [K in keyof Demographics]: Demographics[K] extends Stats ? K : never}[keyof Demographics]
 
     const [regionLevel, setRegionLevel] = useState<number>(1);
     const [ethnicity, setEthnicity] = useState<EthnicityLabel>("Asian");
@@ -26,6 +30,19 @@ export function Map({data}: any) {
     const [displayedRegionStats, setDisplayedRegionStats] = useState<Demographics | undefined | null>(undefined); // clicked
     const [toggleStatsTab, setToggleStatsTab] = useState<boolean>(false);
     const [toggleStatsTabMobile, setToggleStatsTabMobile] = useState<boolean>(false);
+    
+
+
+    const [loadLevelDelay, setLoadLevelDelay] = useState(1);
+
+
+    useEffect(() => {
+        const timer = setTimeout(() => setLoadLevelDelay(5), 1000);
+        return () => {
+            clearTimeout(timer);
+        };
+    }, []);
+
 
     const LabelMappings: Record<EthnicityLabel, DemoValue> = useMemo(() => ({
         "Asian": "asian",
@@ -206,8 +223,8 @@ export function Map({data}: any) {
             .attr("stroke-width", 1 / current_xform) // 2
         
         
-        setSelectedRegion(region.name)
-        setSelectedRegionEthnicity(region.demographics)
+        setSelectedRegion(region.properties.name)
+        setSelectedRegionEthnicity(region.properties.demographics)
 
     }
 
@@ -280,51 +297,50 @@ export function Map({data}: any) {
     */
     const pathsRegion = useMemo(() => {
 
-        return data.region.map( (region: FeatureEthnicity, i: number) => (
-        
-        //(data.region as FeatureCollectionEthnicity)
-               // .features.map((region: FeatureEthnicity, i: number) => (    
+        return (data_region as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
             
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"
                 cursor="pointer"
-                strokeWidth="1"
+                strokeWidth="0"
                 stroke="var(--color-gray-400)"
                 data-level="1"
-                data-demo={JSON.stringify(region.demographics)}
-                fill={renderEthnicityColour(region.demographics, "1")}
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "1")}
                 key={region.id ?? i}
-                d={pathGenerator(region.geometry) ?? undefined}
+                d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
-                onMouseLeave={(e)=>removeRegion(region.name, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
                 onClick={()=>{
                     setToggleStatsTab(true)
-                    setDisplayedRegionStats(region.demographics)
+                    setDisplayedRegionStats(region.properties.demographics)
                     }
                 }
                 
             />
         ));
-    }, [data]); // ethnicity
+    }, []); // ethnicity
 
     const pathsTerritorial = useMemo(() => {
 
-        return data.territorial.map((region: FeatureEthnicity, i: number) => (    
+        return (data_territorial as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"
                 cursor="pointer"
                 strokeWidth="0"
                 stroke="var(--color-gray-400)"
                 data-level="2"
-                data-demo={JSON.stringify(region.demographics)}
-                fill={renderEthnicityColour(region.demographics, "2")}
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "2")}
                 key={region.id ?? i}
-                d={pathGenerator(region.geometry) ?? undefined}
+                d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
-                onMouseLeave={(e)=>removeRegion(region.name, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
                 onClick={()=>{
                     setToggleStatsTab(true)
-                    setDisplayedRegionStats(region.demographics)
+                    setDisplayedRegionStats(region.properties.demographics)
                     }
                 }
                 
@@ -334,22 +350,23 @@ export function Map({data}: any) {
 
     const pathsSA3 = useMemo(() => {
 
-        return data.sa3.map((region: FeatureEthnicity, i: number) => (    
+        return (data_sa3 as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"
                 cursor="pointer"
                 strokeWidth="0"
                 stroke="var(--color-gray-400)"
                 data-level="3"
-                data-demo={JSON.stringify(region.demographics)}
-                fill={renderEthnicityColour(region.demographics, "3")}
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "3")}
                 key={region.id ?? i}
-                d={pathGenerator(region.geometry) ?? undefined}
+                d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
-                onMouseLeave={(e)=>removeRegion(region.name, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
                 onClick={()=>{
                     setToggleStatsTab(true)
-                    setDisplayedRegionStats(region.demographics)
+                    setDisplayedRegionStats(region.properties.demographics)
                     }
                 }
             />
@@ -358,27 +375,31 @@ export function Map({data}: any) {
 
     const pathsSA2 = useMemo(() => {
 
-        return data.sa2.map((region: FeatureEthnicity, i: number) => (    
+        if (loadLevelDelay < 3)
+            return []
+
+        return (data_sa2 as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"
                 cursor="pointer"
                 strokeWidth="0"
                 stroke="var(--color-gray-400)"
                 data-level="4"
-                data-demo={JSON.stringify(region.demographics)}
-                fill={renderEthnicityColour(region.demographics, "4")}
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "4")}
                 key={region.id ?? i}
-                d={pathGenerator(region.geometry) ?? undefined}
+                d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
-                onMouseLeave={(e)=>removeRegion(region.name, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
                 onClick={()=>{
                     setToggleStatsTab(true)
-                    setDisplayedRegionStats(region.demographics)
+                    setDisplayedRegionStats(region.properties.demographics)
                     }
                 }
             />
         ));
-    }, []);
+    }, [loadLevelDelay]);
 
 
     const generateDemoTable = (demo: Demographics) => {
@@ -430,8 +451,9 @@ export function Map({data}: any) {
 
 
 
+
     return (
-         <div className ="h-full w-full relative" >
+        <div className ="h-full w-full relative" >
 
             {!toggleStatsTab ? <></> : 
             <div>

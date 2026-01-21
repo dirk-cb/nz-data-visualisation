@@ -16,7 +16,8 @@ export function Header({ onShowAbout }: HeaderProps) {
     <div className="relative z-50">
         <div className="flex flex-row bg-gray-600 text-gray-100 ">
             <div className="text-4xl font-bold font-[Segoe UI] italic text-gray-100 flex-auto self-end p-5">
-                <span className="ml-5">Census Visualiser Tool</span>
+                <span className="md:flex hidden ml-5">Census Visualiser Tool</span>
+                <span className="flex md:hidden ml-5">CVT</span>
             </div>
             <div className="hidden md:flex flex-10 flex flex-row text-xl italic ">
                 <div className="px-7 self-end cursor-pointer hover:text-gray-300 hover:underline p-5">Home</div>

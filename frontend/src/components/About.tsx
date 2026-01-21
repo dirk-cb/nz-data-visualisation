@@ -7,7 +7,7 @@ interface HeaderProps {
 export function About({ onShowAbout }: HeaderProps) {
 
     return (
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center ">
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-1">
           <div className="bg-gray-200 rounded-md flex flex-col w-2xl">
             <div className="bg-gray-600 text-right pr-2">
                 <span className="font-bold cursor-pointer" onClick={()=>onShowAbout(false)}>❌</span>

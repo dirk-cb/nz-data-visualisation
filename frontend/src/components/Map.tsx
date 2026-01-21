@@ -2,83 +2,89 @@
 //import { useMemo } from "react";
 import {useRef, useState, useEffect, useMemo } from 'react';
 import { geoPath, geoMercator } from "d3-geo"; // type GeoPermissibleObjects
-import { rewind } from "@turf/rewind";
-import { type FeatureCollection } from "geojson";
+//import { type FeatureCollection } from "geojson";
+import { type FeatureCollectionEthnicity, type FeatureEthnicity, type Demographics, type Stats } from "../domain/FeatureEthnicity"
 import * as d3 from "d3";
 import "d3-zoom";
-import nz_region_with_ethnicity_data from  "../../../data-api/data/regions_with_ethnicity.json";
-import sa3_with_ethnicity_data from "../../../data-api/data/sa3_with_ethnicity.json";
+import data_region from  "../../../data-api/data/area_ethnicity/region.json";
+import data_territorial from  "../../../data-api/data/area_ethnicity/territorial.json";
+import data_sa3 from  "../../../data-api/data/area_ethnicity/sa3.json";
+import data_sa2 from  "../../../data-api/data/area_ethnicity/sa2.json";
+import data_max_pct from  "../../../data-api/data/area_ethnicity/max_pct_by_area.json";
 
 export function Map() {
 
-    interface RegionEthnicity {
-
-        area: string
-        asian: number
-        nz_european: number
-        mena: number
-        māori: number
-        pasifika: number
-        other: number
-        total: number
-
-    }
+    const ethnicities = useMemo(
+        () => ["Asian", "European", "MENA", "Māori", "Pasifika", "Other", "LGBT", "No Religion", "Christian", "Islam", "Judaism"],
+        []
+    );
 
 
-    const [regionLevel, setRegionLevel] = useState(1);
 
-    const [ethnicity, setEthnicity] = useState("Asian");
+    type EthnicityLabel = (typeof ethnicities)[number];
+    type DemoValue = { [K in keyof Demographics]: Demographics[K] extends Stats ? K : never}[keyof Demographics]
 
+    const [regionLevel, setRegionLevel] = useState<number>(1);
+    const [ethnicity, setEthnicity] = useState<EthnicityLabel>("Asian");
+    const [selectedRegionEthnicity, setSelectedRegionEthnicity] = useState<Demographics | undefined | null>(undefined); // highlighted
 
-    const regions = useMemo(() => {
-        return (nz_region_with_ethnicity_data as FeatureCollection)
-            .features
-            .map(feature => rewind(feature, { reverse: true }));
-    }, []);
-
-
-    const sa3 = useMemo(() => {
-        return (sa3_with_ethnicity_data as FeatureCollection)
-            .features
-            .filter(feature => feature.geometry != null)
-            .map(feature => rewind(feature, { reverse: true }));
-    }, []);
-
-
-    const maximumPercentages = useMemo(() => {
-
-        let ethnicityKeys = ["asian","nz_european", "mena", "māori", "pasifika", "other"]
-
-        let maxs = {
-            ethnicity:{
-
-            }
-        }
-
-        for (let key of ethnicityKeys) {
-            (maxs.ethnicity as any)[key] = sa3
-                .map((x)=>(x as any).properties.ethnicity)
-                .filter(x=>x)
-                .map((x)=>x[key] / x["total"])
-                .reduce((a,b)=>Math.max(a,b),0)
-        }
-
-
-        return  maxs;
-    }, []);
+    const [displayedRegionStats, setDisplayedRegionStats] = useState<Demographics | undefined | null>(undefined); // clicked
+    const [toggleStatsTab, setToggleStatsTab] = useState<boolean>(false);
+    const [toggleStatsTabMobile, setToggleStatsTabMobile] = useState<boolean>(false);
     
 
+
+    const [loadLevelDelay, setLoadLevelDelay] = useState(1);
+
+
+    useEffect(() => {
+        const timer = setTimeout(() => setLoadLevelDelay(5), 1000);
+        return () => {
+            clearTimeout(timer);
+        };
+    }, []);
+
+
+    const LabelMappings: Record<EthnicityLabel, DemoValue> = useMemo(() => ({
+        "Asian": "asian",
+        "European": "nz_european",
+        "MENA": "mena",
+        "Māori": "māori",
+        "Pasifika": "pasifika",
+        "Other": "other_ethnicity",
+        "LGBT": "lgbt",
+        "No Religion": "no_religion",
+        "Christian": "christian",
+        "Islam": "islam",
+        "Judaism": "judaism",
+    }), []);
+
+    const ReverseLabelMappings: Record<DemoValue, EthnicityLabel> = useMemo(() => {
+        let reverse = {} as Record<string, EthnicityLabel>;
+
+        for (let key in LabelMappings) {
+
+            let value = (LabelMappings[key as DemoValue] as EthnicityLabel)
+
+            reverse[value] = key as DemoValue
+        }
+
+        return reverse;
+
+    }, []);
+
+    const Ethnicities: DemoValue[] = useMemo((()=>["asian", "nz_european", "mena", "māori", "pasifika", "other_ethnicity"]), [])
+
+    const Religions: DemoValue[] = useMemo((()=>["christian", "no_religion", "islam", "judaism"]), [])
+
+
     const [selectedRegion, setSelectedRegion] = useState("");
-
-
-    const [selectedRegionEthnicity, setSelectedRegionEthnicity] = useState<RegionEthnicity | undefined | null>(undefined);
 
     const mapRef = useRef(null);
     // 975, 610
     const width = 975;
     const height = 610;
 
-    //const [transform, setTransform] = useState(d3.zoomIdentity);
     const gRef = useRef<SVGGElement | null>(null);
 
     const projection = useMemo(() => {
@@ -91,64 +97,42 @@ export function Map() {
     const pathGenerator = useMemo(() => {
         return geoPath(projection);
     }, [projection]);
-
-    const ethnicities = useMemo(
-        () => ["Asian", "European", "MENA", "Māori", "Pasifika", "Other", "LGBT"],
-        []
-    );
-
     
 
-    const renderEthnicityColour = (region: any): any => {
+    const renderEthnicityColour = (demographics : Demographics | undefined, level : string): any => {
+
+        let max_pct_map;
+
+
+        if (level == "1") { // Region
+            max_pct_map = data_max_pct.region
+        } else if (level == "2") { // Territorial
+            max_pct_map = data_max_pct.territorial
+        } else if (level == "3") { // SA3
+            max_pct_map = data_max_pct.sa3
+        } else { // SA2
+            max_pct_map = data_max_pct.sa2
+        } 
 
 
 
-        if (!region.ethnicity) {
+        if (demographics === undefined) { // No people live here
+            return "white"
 
         } else {
+            
+            let key : DemoValue = LabelMappings[ethnicity]
+            let stat: Stats = demographics[key]
+            let max_pct = max_pct_map[key]
+            let colorScale = d3.scaleSequential(d3.interpolateBlues)
+                .domain([0, max_pct])
 
 
-            if (ethnicity == "Asian") {
-                let max_percent = (maximumPercentages as any).ethnicity.asian
-                const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, max_percent]);
-                return colorScale(region.ethnicity.asian / region.ethnicity.total);
-            }
-            else if (ethnicity == "Māori") {
-                let max_percent = (maximumPercentages as any).ethnicity.māori
-                const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, max_percent]);
-                return colorScale(region.ethnicity.māori / region.ethnicity.total);
-            }
-            else if (ethnicity == "European") {
-                let max_percent = (maximumPercentages as any).ethnicity.nz_european
-                const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, max_percent]);
-                return colorScale(region.ethnicity.nz_european / region.ethnicity.total);
-            }
-            else if (ethnicity == "MENA") {
-                let max_percent = (maximumPercentages as any).ethnicity.mena
-                const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, max_percent]);
-                return colorScale(region.ethnicity.mena / region.ethnicity.total);
-            }
-            else if (ethnicity == "Pasifika") {
-                let max_percent = (maximumPercentages as any).ethnicity.pasifika
-                const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, max_percent]);
-                return colorScale(region.ethnicity.pasifika / region.ethnicity.total);
-            }
-            else if (ethnicity == "Other") {
-                let max_percent = (maximumPercentages as any).ethnicity.other
-                const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, max_percent]);
-                return colorScale(region.ethnicity.other / region.ethnicity.total);
-            }
+            return colorScale(stat.pct);
            
         }
 
-        if (region.lgbt) {
-            const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, 0.25]);
-
-            if (ethnicity == "LGBT") 
-                return colorScale(region.lgbt.lgbt / region.lgbt.total);
-
-        }
-         return "white"
+        
     }
 
 
@@ -202,8 +186,28 @@ export function Map() {
         
     }, [regionLevel]);
 
+     const maxPctColourScale = useMemo(() => {
 
-    const updateRegion = (region: any, event: any) => {
+        let max_pct_map;
+        let key : DemoValue = LabelMappings[ethnicity]
+
+        
+
+        if (regionLevel == 1) { // Region
+            max_pct_map = data_max_pct.region
+        } else if (regionLevel == 2) { // Territorial
+            max_pct_map = data_max_pct.territorial
+        } else if (regionLevel == 3) { // SA3
+            max_pct_map = data_max_pct.sa3
+        } else { // SA2
+            max_pct_map = data_max_pct.sa2
+        } 
+
+        return max_pct_map[key];
+    }, [ethnicity, regionLevel]);
+
+
+    const updateRegion = (region: FeatureEthnicity, event: any) => {
 
         const new_region = event.target;
 
@@ -221,7 +225,7 @@ export function Map() {
         
         
         setSelectedRegion(region.properties.name)
-        setSelectedRegionEthnicity(region.properties.ethnicity)
+        setSelectedRegionEthnicity(region.properties.demographics)
 
     }
 
@@ -245,113 +249,310 @@ export function Map() {
         const g = d3.select(gRef.current);
 
         const zoomBehavior = d3.zoom()
-            .scaleExtent([1, 70]) 
+            .scaleExtent([1, 200]) 
             .on('zoom', (event) => {
 
-                if (event.transform.k < 8) {
+                if (event.transform.k < 4) { // Region
                     setRegionLevel(1)
-                } else {
+                } else if (event.transform.k < 24) { // Territorial
                     setRegionLevel(2)
-                }
-
-                //const current_xform = d3.zoomTransform(mapRef.current as any).k
+                } else if (event.transform.k < 64) { // SA3
+                    setRegionLevel(3)
+                } else { // SA2
+                    setRegionLevel(4)
+                } 
                 
                 g.attr("transform", event.transform);
-                //g.selectAll("path").attr("stroke-width", 0.5 / current_xform);
 
             })
 
         svg.call((zoomBehavior as any));
     }, []);
 
+
+    // Update Ethnicity colours
+    useEffect(() => {
+
+        d3.select(gRef.current)
+            .selectAll("path[data-demo]")
+            .attr("fill", function (){
+
+                if (this != null) {
+                    const attr = (this as SVGPathElement).getAttribute("data-demo");
+                    const level = (this as SVGPathElement).getAttribute("data-level");
+
+                    if (attr != null && level != null) {
+                        return renderEthnicityColour(JSON.parse(attr) as Demographics, level);
+
+                    }     
+                }
+            })
+    }, [ethnicity]); // regionLevel
+
     
-    const regionPathsSA3 = useMemo(() => {
 
-        //const current_xform = d3.zoomTransform(mapRef.current as any).k
-
-        return sa3.map((region: any, i: number) => (
-            <path
-            className="transition-[fill] duration-[500ms] ease-in-out"
-            
-            
-            key={i}
-            d={pathGenerator(region) ?? undefined}
-            fill={renderEthnicityColour((region as any).properties as any)}
-
-
-            stroke= "var(--color-gray-400)"
-            strokeWidth="0.0625"    
     
-            onMouseEnter={(e)=>updateRegion((region as any), e)}
-            onMouseLeave={(e)=>removeRegion((region as any).properties.name, e)}
-            />
-        ));
-    }, [sa3, ethnicity]);
 
-        
-    const regionPathsRegion = useMemo(() => {
+    /*
+    Generate the paths for each map
+    */
+    const pathsRegion = useMemo(() => {
 
-        return regions.map((region: any, i: number) => (    
+        return (data_region as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
+            
             <path 
-                className=""
+                className="transition-[fill] duration-[1000ms] ease-in-out"
                 cursor="pointer"
-                strokeWidth="0.5"
+                strokeWidth="0"
                 stroke="var(--color-gray-400)"
-                fill={renderEthnicityColour((region.properties as any))}
+                data-level="1"
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "1")}
                 key={region.id ?? i}
                 d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
                 onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
+                onClick={()=>{
+                    setToggleStatsTab(true)
+                    setDisplayedRegionStats(region.properties.demographics)
+                    }
+                }
+                
             />
         ));
-    }, [regions, ethnicity]);
+    }, []); // ethnicity
+
+    const pathsTerritorial = useMemo(() => {
+
+        return (data_territorial as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
+            <path 
+                className="transition-[fill] duration-[1000ms] ease-in-out"
+                cursor="pointer"
+                strokeWidth="0"
+                stroke="var(--color-gray-400)"
+                data-level="2"
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "2")}
+                key={region.id ?? i}
+                d={pathGenerator(region) ?? undefined}
+                onMouseEnter={(e)=>updateRegion(region, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
+                onClick={()=>{
+                    setToggleStatsTab(true)
+                    setDisplayedRegionStats(region.properties.demographics)
+                    }
+                }
+                
+            />
+        ));
+    }, []);
+
+    const pathsSA3 = useMemo(() => {
+
+        return (data_sa3 as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
+            <path 
+                className="transition-[fill] duration-[1000ms] ease-in-out"
+                cursor="pointer"
+                strokeWidth="0"
+                stroke="var(--color-gray-400)"
+                data-level="3"
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "3")}
+                key={region.id ?? i}
+                d={pathGenerator(region) ?? undefined}
+                onMouseEnter={(e)=>updateRegion(region, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
+                onClick={()=>{
+                    setToggleStatsTab(true)
+                    setDisplayedRegionStats(region.properties.demographics)
+                    }
+                }
+            />
+        ));
+    }, []);
+
+    const pathsSA2 = useMemo(() => {
+
+        if (loadLevelDelay < 3)
+            return []
+
+        return (data_sa2 as FeatureCollectionEthnicity)
+                .features.map((region: FeatureEthnicity, i: number) => (    
+            <path 
+                className="transition-[fill] duration-[1000ms] ease-in-out"
+                cursor="pointer"
+                strokeWidth="0"
+                stroke="var(--color-gray-400)"
+                data-level="4"
+                data-demo={JSON.stringify(region.properties.demographics)}
+                fill={renderEthnicityColour(region.properties.demographics, "4")}
+                key={region.id ?? i}
+                d={pathGenerator(region) ?? undefined}
+                onMouseEnter={(e)=>updateRegion(region, e)}
+                onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
+                onClick={()=>{
+                    setToggleStatsTab(true)
+                    setDisplayedRegionStats(region.properties.demographics)
+                    }
+                }
+            />
+        ));
+    }, [loadLevelDelay]);
+
+
+    const generateDemoTable = (demo: Demographics) => {
+        return <div>
+            <div className="my-1" >
+                <span className="font-bold text-lg text-gray-600">Population </span> { (demo.total).toLocaleString() }
+            </div>
+            <div className="my-1">
+                <span className="font-bold text-lg text-gray-600">LGBT </span> { (demo.lgbt.pct * 100).toFixed(2) }%
+            </div>
+            <table className="lg:table-fixed table-auto w-full ">
+                <thead className="sticky top-0">
+                  <tr className="bg-gray-500 text-gray-100 ">
+                    <th className="p-0.5">Ethnicity</th>
+                    <th className="p-0.5">%</th>
+                    <th className="p-0.5">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {Ethnicities.sort((x,y)=>demo[y].pct - demo[x].pct).map((row, i)=>{
+                  return  (<tr className="odd:bg-white even:bg-gray-200" key={i}>
+                    <td className="p-0.5 pl-2 border-r-2 border-gray-400 ">{ReverseLabelMappings[row]}</td>
+                    <td className="p-0.5 pl-2 border-r-2 border-gray-400 text-right pr-2">{(demo[row].pct * 100).toFixed(2)}%</td>
+                    <td className="p-0.5 pl-2 text-right pr-2">{demo[row].count.toLocaleString()}</td>
+                  </tr>)
+                })}
+                </tbody>
+              </table>
+              <table className="lg:table-fixed table-auto w-full mt-5">
+                <thead className="sticky top-0">
+                  <tr className="bg-gray-500 text-gray-100 ">
+                    <th className="p-0.5">Religion</th>
+                    <th className="p-0.5">%</th>
+                    <th className="p-0.5">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {Religions.sort((x,y)=>demo[y].pct - demo[x].pct).map((row,i)=>{
+                  return  (<tr className="odd:bg-white even:bg-gray-200" key={i}>
+                    <td className="p-0.5 pl-2 border-r-2 border-gray-400 ">{ReverseLabelMappings[row]}</td>
+                    <td className="p-0.5 pl-2 border-r-2 border-gray-400 text-right pr-2">{(demo[row].pct * 100).toFixed(2)}%</td>
+                    <td className="p-0.5 pl-2 text-right pr-2">{demo[row].count.toLocaleString()}</td>
+                  </tr>)
+                })}
+                </tbody>
+              </table>
+        </div>
+    }
+
+
+
 
     return (
         <div className ="h-full w-full relative" >
 
+            {!toggleStatsTab ? <></> : 
+            <div>
+                <div className= "md:block hidden absolute bottom-3 right-3 w-1/3 rounded-sm ">
+                        <div className=" bg-gray-600/100 ml-5  px-5 pt-3  text-gray-100 ">
+                            <div 
+                                className="absolute right-0 pr-5 text-4xl font-[Arial] cursor-pointer"
+                                onClick={()=>setToggleStatsTab(false)}
+                            >✖</div>
+                            
+                            <h1 className="text-left text-xl lg:text-3xl pb-2 mr-8">{displayedRegionStats && displayedRegionStats.area_name}</h1> 
+                            <h2 className="text-left text-md lg:text-xl pb-2">Overview</h2>
+
+                        
+
+                        </div>
+                        <div className=" bg-gray-300/100 ml-5  px-5 pt-3 pb-6 text-black ">
+                            { displayedRegionStats && (generateDemoTable(displayedRegionStats)) }
+                        </div>
+                </div>
+                
+            </div>}
+
             {selectedRegion==="" ? <></> :
             (
-                <>
-                    <div className= " absolute bottom-10 w-full hidden md:flex">
-                        <div className="flex-1 text-center bg-gray-600/75 ml-50 mr-50 rounded-xl m-auto p-5 text-gray-100">
+                <div className="z-2">
+                    <div className= " absolute bottom-10 left-1/3 w-1/3 hidden md:flex">
+                        <div className="flex-1 text-center bg-gray-600/75 rounded-xl m-auto p-5 text-gray-100">
                             <h1 className="flex-1 text-center text-3xl ">{selectedRegion}</h1>
-                            { selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (<div className="font-lg font-medium">
-                                <p>NZ European: { ((selectedRegionEthnicity.nz_european / selectedRegionEthnicity.total) * 100).toFixed(2) }% </p>
-                                <p>Māori: { ((selectedRegionEthnicity.māori / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                                <p>Asian: { ((selectedRegionEthnicity.asian / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                                <p>Pasifika: { ((selectedRegionEthnicity.pasifika / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                                <p>MENA: { ((selectedRegionEthnicity.mena / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
-                                <p>Other: { ((selectedRegionEthnicity.other / selectedRegionEthnicity.total) * 100).toFixed(2) }%  </p>
+
+                            {selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (<div className="font-lg font-medium">
+                                <p>{ethnicity}: { (selectedRegionEthnicity[LabelMappings[ethnicity]].pct * 100).toFixed(2) }% </p>
+                                <p>Population: { selectedRegionEthnicity.total.toLocaleString() } </p>
                             </div>) }
                             
                         </div>
                         
                     </div>
-                    <div className= " absolute bottom-0 w-full md:hidden bg-red-100">
-                        <div className="flex-1 text-center bg-gray-600/75  m-auto p-5 text-gray-100">
-                            <h1 className="flex-1 text-center text-lg ">{selectedRegion}</h1>
-                            { selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (<div className="font-lg font-medium">
-                                Euro: { ((selectedRegionEthnicity.nz_european / selectedRegionEthnicity.total) * 100).toFixed(2) }% 
-                                Māori: { ((selectedRegionEthnicity.māori / selectedRegionEthnicity.total) * 100).toFixed(2) }% 
-                                Asian: { ((selectedRegionEthnicity.asian / selectedRegionEthnicity.total) * 100).toFixed(2) }%
-                                Pasifika: { ((selectedRegionEthnicity.pasifika / selectedRegionEthnicity.total) * 100).toFixed(2) }%
-                                MENA: { ((selectedRegionEthnicity.mena / selectedRegionEthnicity.total) * 100).toFixed(2) }%
-                                Other: { ((selectedRegionEthnicity.other / selectedRegionEthnicity.total) * 100).toFixed(2) }%
-                            </div>) }
-                            
+                    <div className= " absolute bottom-0 w-full max-h-3/4 md:hidden overflow-y-scroll">
+                        <div 
+                            className="absolute right-0 m-2 p-1 border border-gray-600 bg-gray-100 text-sm cursor-pointer"
+                            onClick={()=>setToggleStatsTabMobile(!toggleStatsTabMobile)}
+
+                        >{toggleStatsTabMobile ? "Hide" : "Show"}</div>
+                        <div className="flex-1 text-center bg-gray-600 pt-10 rounded-md m-auto p-5 text-gray-100">
+                            <h1 className="flex-1 text-center text-lg font-medium">{selectedRegion}</h1>
+                             {selectedRegionEthnicity !== null && selectedRegionEthnicity !== undefined && (
+                                <div className="font-sm">
+                                 <p className="flex-1 text-center ">{ethnicity}: { (selectedRegionEthnicity[LabelMappings[ethnicity]].pct * 100).toFixed(2) }
+                                    % , Population: { selectedRegionEthnicity.total.toLocaleString() }</p>
+                                </div>
+                            ) }
+                        <div className="flex mt-1 flex-row"> 
+                            <div className="flex-1 text-left ">0.00% </div> 
+                            <div className="flex-1 text-right">{ (maxPctColourScale * 100).toFixed(2) }%</div> 
+                        </div>
+                        <div className="flex flex-row h-5 w-full ">
+                        { 
+                            ([0, 0.2, 0.4, 0.6, 0.8, 1].map((n, i)=>
+                                
+                                    <div key={i} className="flex-1" style={{backgroundColor:d3.interpolateBlues(n)}}></div>
+                                
+                            )) 
+                        }
+                        </div>
+                        <div className="text-black bg-gray-300/100 px-5 font-right">
+                            { displayedRegionStats && toggleStatsTabMobile && (generateDemoTable(displayedRegionStats)) }
+                        </div>
                         </div>
                         
                     </div>
-                </>
+                </div>
             )}
 
-            {<div className= " absolute left-0 ">
-                    <div className="mt-5 bg-gray-600/100 ml-5 rounded-xl px-5 pt-3 pb-6 text-gray-100">
+            
+
+            {<div className= " absolute left-0">
+                    <div className="mt-5 bg-gray-600/100 ml-5 rounded-xl px-5 pt-3 pb-6 text-gray-100 ">
+                        
                         <h1 className="text-center text-xl pb-2">Choose a demographic</h1> 
 
-                        <select className="bg-gray-100 text-black p-2 rounded-lg w-full " onChange={(v)=>setEthnicity(v.target.value)}>
+                        <select className="bg-gray-100 text-black p-2 rounded-lg w-full " onChange={(v)=>setEthnicity(v.target.value as EthnicityLabel)}>
                             {ethnicities.map((val)=>(<option value={val} key={val} >{val}</option>))}
                         </select>
+                        <div className="mt-4 flex-row hidden md:flex"> 
+                            <div className="flex-1 text-left ">0.00% </div> 
+                            <div className="flex-1 text-right">{ (maxPctColourScale * 100).toFixed(2) }%</div> 
+                        </div>
+                        <div className="hidden md:flex flex-row h-5 w-full ">
+                        { 
+                            ([0, 0.2, 0.4, 0.6, 0.8, 1].map((n, i)=>
+                                
+                                    <div key={i} className="flex-1" style={{backgroundColor:d3.interpolateBlues(n)}}></div>
+                                
+                            )) 
+                        }
+                        </div>
+
                     </div>
             </div>}
 
@@ -359,8 +560,10 @@ export function Map() {
             
                 <svg className="" ref={mapRef} viewBox="0 0 975 610" height="100%" width="100%" > 
                     <g ref={gRef} >
-                        { regionLevel == 1 && regionPathsRegion }
-                        { regionLevel == 2 && regionPathsSA3} 
+                        <g className={regionLevel === 1 ? "block" : "hidden"}>{pathsRegion}</g>
+                        <g className={regionLevel === 2 ? "block" : "hidden"}>{pathsTerritorial}</g>
+                        <g className={regionLevel === 3 ? "block" : "hidden"}>{pathsSA3}</g>
+                        <g className={regionLevel === 4 ? "block" : "hidden"}>{pathsSA2}</g>
                     </g>
                 </svg>
                 
@@ -371,4 +574,3 @@ export function Map() {
     )
 
 }
-

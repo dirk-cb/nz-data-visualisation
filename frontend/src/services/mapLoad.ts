@@ -1,11 +1,11 @@
 import { asyncBufferFromUrl, parquetReadObjects } from 'hyparquet';
 
 
-const BASE_PATH = 
-    window.location.hostname === 'localhost' 
-    || window.location.hostname === '127.0.0.1'? './' : (window.location.origin + import.meta.env.BASE_URL);
+const BASE_PATH = "test"//import.meta.env.BASE_URL
+    //window.location.hostname === 'localhost' 
+   // || window.location.hostname === '127.0.0.1'? './' : (window.location.origin + import.meta.env.BASE_URL);
 
-console.log(window.location.hostname)
+console.log("test")
 
 const FILENAMES = ["region", "territorial", "sa3", "sa2"]
 

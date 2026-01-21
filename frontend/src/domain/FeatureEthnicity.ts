@@ -6,7 +6,7 @@ import { type Feature, type FeatureCollection } from "geojson";
         pct: number
     }
 
-    export interface Demographics {
+    export interface Demographics extends Feature {
         area_name: string
         area_code: string
         mena: Stats
@@ -28,13 +28,14 @@ import { type Feature, type FeatureCollection } from "geojson";
         total: number
     }
 
-    type FlexibleProperties = {
+    /*type FlexibleProperties = {
         //id: string;
         demographics?: Demographics;
-    } & Record<string, any>;
+    } & Record<string, any>;*/
 
     export interface FeatureEthnicity extends Feature {
-        properties: FlexibleProperties;
+        demographics?: Demographics
+        name: string
     }
 
     export interface FeatureCollectionEthnicity extends FeatureCollection {

@@ -1,12 +1,10 @@
 import { asyncBufferFromUrl, parquetReadObjects } from 'hyparquet';
 
-const BASE_URL = import.meta.env.BASE_URL || "/nz-data-visualisation/";
-
 const FILENAMES = ["region", "territorial", "sa3", "sa2"]
 
 const fetchCensusData = async (filename: string): Promise<any[]> => {
     
-    const url = BASE_URL + "data/" + filename + ".parquet"
+    const url = `${import.meta.env.BASE_URL}/data/${filename}.parquet`.replace(/\/+/g, '/');
 
     console.log(url)
     

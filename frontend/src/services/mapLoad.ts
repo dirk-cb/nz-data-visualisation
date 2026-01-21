@@ -10,8 +10,10 @@ const fetchCensusData = async (filename: string): Promise<any[]> => {
     
     const url = `${BASE_PATH}/data/${filename}.parquet`.replace(/\/+/g, '/');
 
-    const response_head = await fetch(url, { method: 'HEAD' });
-    const bytelen = (response_head.headers.get('content-length') as any)
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const bytelen = blob.size;
+
     const file = await asyncBufferFromUrl({url:url, byteLength:bytelen});
     const read = await parquetReadObjects({ file });
     

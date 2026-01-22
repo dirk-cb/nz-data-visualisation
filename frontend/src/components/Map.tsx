@@ -5,10 +5,6 @@ import { geoPath, geoMercator } from "d3-geo"; // type GeoPermissibleObjects
 import { type FeatureCollectionEthnicity, type FeatureEthnicity, type Demographics, type Stats } from "../domain/FeatureEthnicity"
 import * as d3 from "d3";
 import "d3-zoom";
-//import data_region from  "../../../data-api/data/area_ethnicity/region.json";
-//import data_territorial from  "../../../data-api/data/area_ethnicity/territorial.json";
-//import data_sa3 from  "../../../data-api/data/area_ethnicity/sa3.json";
-//import data_sa2 from  "../../../data-api/data/area_ethnicity/sa2.json";
 import data_max_pct from  "../../../data-api/data/area_ethnicity/max_pct_by_area.json";
 
 

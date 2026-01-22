@@ -2,12 +2,9 @@ const BASE_PATH = import.meta.env.BASE_URL
 
 const FILENAMES = ["region", "territorial", "sa3", "sa2"]
 
-
-
-
 const fetchCensusData = async (filename: string): Promise<any[]> => {
     
-    const url = "" + `${BASE_PATH}/data/${filename}.json`.replace(/\/+/g, '/');
+    const url = `${BASE_PATH}/data/${filename}.json`.replace(/\/+/g, '/');
 
     let res =  await fetch(url);
     

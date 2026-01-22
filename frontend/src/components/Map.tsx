@@ -5,13 +5,14 @@ import { geoPath, geoMercator } from "d3-geo"; // type GeoPermissibleObjects
 import { type FeatureCollectionEthnicity, type FeatureEthnicity, type Demographics, type Stats } from "../domain/FeatureEthnicity"
 import * as d3 from "d3";
 import "d3-zoom";
-import data_region from  "../../../data-api/data/area_ethnicity/region.json";
-import data_territorial from  "../../../data-api/data/area_ethnicity/territorial.json";
-import data_sa3 from  "../../../data-api/data/area_ethnicity/sa3.json";
-import data_sa2 from  "../../../data-api/data/area_ethnicity/sa2.json";
+//import data_region from  "../../../data-api/data/area_ethnicity/region.json";
+//import data_territorial from  "../../../data-api/data/area_ethnicity/territorial.json";
+//import data_sa3 from  "../../../data-api/data/area_ethnicity/sa3.json";
+//import data_sa2 from  "../../../data-api/data/area_ethnicity/sa2.json";
 import data_max_pct from  "../../../data-api/data/area_ethnicity/max_pct_by_area.json";
 
-export function Map() {
+
+export function Map({data}: any) {
 
     const ethnicities = useMemo(
         () => ["Asian", "European", "MENA", "Māori", "Pasifika", "Other", "LGBT", "No Religion", "Christian", "Islam", "Judaism"],
@@ -297,7 +298,7 @@ export function Map() {
     */
     const pathsRegion = useMemo(() => {
 
-        return (data_region as FeatureCollectionEthnicity)
+        return (data.region as FeatureCollectionEthnicity)
                 .features.map((region: FeatureEthnicity, i: number) => (    
             
             <path 
@@ -324,7 +325,7 @@ export function Map() {
 
     const pathsTerritorial = useMemo(() => {
 
-        return (data_territorial as FeatureCollectionEthnicity)
+        return (data.territorial as FeatureCollectionEthnicity)
                 .features.map((region: FeatureEthnicity, i: number) => (    
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"
@@ -350,7 +351,7 @@ export function Map() {
 
     const pathsSA3 = useMemo(() => {
 
-        return (data_sa3 as FeatureCollectionEthnicity)
+        return (data.sa3 as FeatureCollectionEthnicity)
                 .features.map((region: FeatureEthnicity, i: number) => (    
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"
@@ -378,7 +379,7 @@ export function Map() {
         if (loadLevelDelay < 3)
             return []
 
-        return (data_sa2 as FeatureCollectionEthnicity)
+        return (data.sa2 as FeatureCollectionEthnicity)
                 .features.map((region: FeatureEthnicity, i: number) => (    
             <path 
                 className="transition-[fill] duration-[1000ms] ease-in-out"

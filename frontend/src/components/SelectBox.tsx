@@ -109,8 +109,10 @@ export const ToggleZoom = ({ zoomSetting, setZoomSetting } : any) => {
 
   const options = ["Default", "Regions", "Territorial", "SA3", "SA2"]
 
+  const [open, setOpen] = useState(false );
 
-  return (<Popover.Root>
+
+  return (<Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button className="p-2">
             <Settings color="white"/>
@@ -122,8 +124,8 @@ export const ToggleZoom = ({ zoomSetting, setZoomSetting } : any) => {
           >
             <div className="bg-gray-300 p-2  font-medium">Map Settings</div>
             <div className="p-2">
-               <select value={zoomSetting} className="bg-white" onChange={(r)=>setZoomSetting(r.target.value)}>
-
+               <select value={zoomSetting} className="bg-white" onChange={(r)=>{setZoomSetting(r.target.value); setOpen(false)}}>
+              
               {options.map((r) => (
                 <option key={r} value={r}>
                   {r}

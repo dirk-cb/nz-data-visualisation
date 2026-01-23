@@ -114,7 +114,7 @@ export function Map({data}: any) {
 
         let max_pct_map;
 
-
+        
         if (level == "1") { // Region
             max_pct_map = data_max_pct.region
         } else if (level == "2") { // Territorial
@@ -204,18 +204,18 @@ export function Map({data}: any) {
 
         
 
-        if (regionLevel == 1) { // Region
+        if (mapSettings == "Regions" || (regionLevel === 1 && mapSettings == "Default")) { // Region
             max_pct_map = data_max_pct.region
-        } else if (regionLevel == 2) { // Territorial
+        } else if (mapSettings == "Territorial" || (regionLevel === 2 && mapSettings == "Default")) { // Territorial
             max_pct_map = data_max_pct.territorial
-        } else if (regionLevel == 3) { // SA3
+        } else if (mapSettings == "SA3" || (regionLevel === 3 && mapSettings == "Default")) { // SA3
             max_pct_map = data_max_pct.sa3
         } else { // SA2
             max_pct_map = data_max_pct.sa2
         } 
 
         return max_pct_map[key];
-    }, [ethnicity, regionLevel]);
+    }, [ethnicity, regionLevel, mapSettings]);
 
 
     const updateRegion = (region: FeatureEthnicity, event: any) => {

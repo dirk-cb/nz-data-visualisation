@@ -14,12 +14,16 @@ const fetchCensusData = async (filename: string): Promise<any[]> => {
 
 export const getMapData = async() => {
 
+    
+
     const promises = FILENAMES.map(async (f) => {
         const data = await fetchCensusData(f);
         return [f, data];
     });
 
     const entries = await Promise.all(promises);
+
+
 
     return Object.fromEntries(entries);
 }

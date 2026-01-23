@@ -15,16 +15,16 @@ import { type Feature, type FeatureCollection } from "geojson";
         asian: Stats
         nz_european: Stats
         māori: Stats
-        //total_ethnicity: number
+        chinese: Stats
+        indian: Stats
+        filipino: Stats
+        other_asian: Stats
         lgbt: Stats
         non_lgbt: Stats
         no_religion: Stats
         christian: Stats
         islam: Stats
         judaism: Stats
-        //total_religion: number
-        //total_lgbt: number
-        //other_religion: Stats
         total: number
     }
 
@@ -39,4 +39,12 @@ import { type Feature, type FeatureCollection } from "geojson";
 
     export interface FeatureCollectionEthnicity extends FeatureCollection {
         features: FeatureEthnicity[]
+    }
+    
+    export interface SelectOption {
+      value: keyof Demographics
+      label: string
+      cat: string
+      suboption?: boolean
+    
     }

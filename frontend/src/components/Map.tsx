@@ -7,13 +7,17 @@ import * as d3 from "d3";
 import "d3-zoom";
 import data_max_pct from  "../../../data-api/data/area_ethnicity/max_pct_by_area.json";
 
+import { TabbedDemographicSelect, ToggleZoom } from "./SelectBox"
+
 
 export function Map({data}: any) {
 
     const ethnicities = useMemo(
-        () => ["Asian", "European", "MENA", "Māori", "Pasifika", "Other", "LGBT", "No Religion", "Christian", "Islam", "Judaism"],
+        () => ["Asian", "Chinese", "Indian", "Filipino" , "Other Asian",  "European", "MENA", "Māori", "Pasifika", "Other", "LGBT", "No Religion", "Christian", "Islam", "Judaism"],
         []
     );
+
+    
 
 
 
@@ -33,6 +37,10 @@ export function Map({data}: any) {
     const [loadLevelDelay, setLoadLevelDelay] = useState(1);
 
 
+    const [mapSettings, setMapSettings] = useState("Default");
+
+
+
     useEffect(() => {
         const timer = setTimeout(() => setLoadLevelDelay(5), 1000);
         return () => {
@@ -41,8 +49,15 @@ export function Map({data}: any) {
     }, []);
 
 
+    
+
+
     const LabelMappings: Record<EthnicityLabel, DemoValue> = useMemo(() => ({
         "Asian": "asian",
+        "Chinese": "chinese",
+        "Indian": "indian",
+        "Filipino": "filipino",
+        "Other Asian": "other_asian",
         "European": "nz_european",
         "MENA": "mena",
         "Māori": "māori",
@@ -400,7 +415,7 @@ export function Map({data}: any) {
 
 
     const generateDemoTable = (demo: Demographics) => {
-        return <div>
+        return <div className="select-text">
             <div className="my-1" >
                 <span className="font-bold text-lg text-gray-600">Population </span> { (demo.total).toLocaleString() }
             </div>
@@ -450,7 +465,7 @@ export function Map({data}: any) {
 
 
     return (
-        <div className ="h-full w-full relative" >
+        <div className ="h-full w-full relative select-none" >
 
             {!toggleStatsTab ? <></> : 
             <div>
@@ -528,13 +543,15 @@ export function Map({data}: any) {
             
 
             {<div className= " absolute left-0">
+                
                     <div className="mt-5 bg-gray-600/100 ml-5 rounded-xl px-5 pt-3 pb-6 text-gray-100 ">
+                        <div className="absolute right-0 top-5 z-2">
+                        < ToggleZoom zoomSetting={mapSettings} setZoomSetting={setMapSettings} />
+                        </div>
+                        <div className="text-black">
+                        < TabbedDemographicSelect setValueSelected={setEthnicity}/>
                         
-                        <h1 className="text-center text-xl pb-2">Choose a demographic</h1> 
-
-                        <select className="bg-gray-100 text-black p-2 rounded-lg w-full " onChange={(v)=>setEthnicity(v.target.value as EthnicityLabel)}>
-                            {ethnicities.map((val)=>(<option value={val} key={val} >{val}</option>))}
-                        </select>
+                        </div>
                         <div className="mt-4 flex-row hidden md:flex"> 
                             <div className="flex-1 text-left ">0.00% </div> 
                             <div className="flex-1 text-right">{ (maxPctColourScale * 100).toFixed(2) }%</div> 
@@ -556,10 +573,10 @@ export function Map({data}: any) {
             
                 <svg className="" ref={mapRef} viewBox="0 0 975 610" height="100%" width="100%" > 
                     <g ref={gRef} >
-                        <g className={regionLevel === 1 ? "block" : "hidden"}>{pathsRegion}</g>
-                        <g className={regionLevel === 2 ? "block" : "hidden"}>{pathsTerritorial}</g>
-                        <g className={regionLevel === 3 ? "block" : "hidden"}>{pathsSA3}</g>
-                        <g className={regionLevel === 4 ? "block" : "hidden"}>{pathsSA2}</g>
+                        <g className={(mapSettings == "Regions" || (regionLevel === 1 && mapSettings == "Default")) ? "block" : "hidden"}>{pathsRegion}</g>
+                        <g className={(mapSettings == "Territorial" || (regionLevel === 2 && mapSettings == "Default")) ? "block" : "hidden"}>{pathsTerritorial}</g>
+                        <g className={(mapSettings == "SA3" || (regionLevel === 3 && mapSettings == "Default")) ? "block" : "hidden"}>{pathsSA3}</g>
+                        <g className={(mapSettings == "SA2" || (regionLevel === 4 && mapSettings == "Default")) ? "block" : "hidden"}>{pathsSA2}</g>
                     </g>
                 </svg>
                 

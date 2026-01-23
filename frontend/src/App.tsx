@@ -25,7 +25,7 @@ export default function App() {
 
           })
           .catch((err) => {
-              console.error("Error loading Parquet files:", err);
+              console.error("Error loading files:", err);
           });
       }, []);
   
@@ -47,3 +47,26 @@ export default function App() {
     </>
   )
 }
+
+/*
+<div className="flex flex-col h-dvh md:h-screen bg-gray-100">
+
+      <Header onShowAbout={setDisplayAbout}/>
+      {(runAnimation != true) && <div className={` transition-opacity duration-1000 ${runAnimation == false ? 'opacity-0' : 'opacity-100'}`}><Loading/></div>}
+
+      {data && <div className={`flex-1 min-h-0 transition-opacity duration-1000 ${runAnimation ? 'opacity-100' : 'opacity-0'}`}> <Map data={data} /></div> }
+
+        
+      {displayAbout && <About onShowAbout={setDisplayAbout}/> }
+      
+      </div>
+
+
+
+      <div className="flex flex-col h-dvh md:h-screen bg-gray-100">
+
+      <MultiSelect></MultiSelect>
+      
+      </div>
+
+*/

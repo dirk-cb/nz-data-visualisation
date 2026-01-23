@@ -13,6 +13,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@radix-ui/react-popover": "^1.1.15",
     "@tailwindcss/vite": "^4.1.18",
     "@turf/rewind": "7.3.2",
     "d3": "7.9.0",
@@ -20,8 +21,10 @@
     "d3-zoom": "^3.0.0",
     "geojson": "0.5.0",
     "gh-pages": "^6.3.0",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-select": "^5.10.2",
     "react-svg-pan-zoom": "3.13.1",
     "tailwindcss": "^4.1.18",
     "topojson-client": "3.1.0"

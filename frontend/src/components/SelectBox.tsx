@@ -89,9 +89,23 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
       <label className="block text-md font-medium text-gray-100 mb-1">
         Demographic
       </label>
+
       <Select
+      
         components={{ Menu:CustomMenu, Option:CustomOption }}
-        className="text-sm"
+        isSearchable={true}
+        className="text-sm hidden x md:block"
+        options={ displayList }
+        defaultValue={options[0]}
+        closeMenuOnSelect={true} 
+        blurInputOnSelect={false}
+        onChange={(v: any)=>setValueSelected(v.label)}
+      />
+      <Select
+      
+        components={{ Menu:CustomMenu, Option:CustomOption }}
+        isSearchable={false}
+        className="text-sm md:hidden x block"
         options={ displayList }
         defaultValue={options[0]}
         closeMenuOnSelect={true} 

@@ -17,6 +17,7 @@ export function Map({data}: any) {
         []
     );
 
+
     
 
 
@@ -31,7 +32,7 @@ export function Map({data}: any) {
     const [displayedRegionStats, setDisplayedRegionStats] = useState<Demographics | undefined | null>(undefined); // clicked
     const [toggleStatsTab, setToggleStatsTab] = useState<boolean>(false);
     const [toggleStatsTabMobile, setToggleStatsTabMobile] = useState<boolean>(false);
-    
+
 
 
     const [loadLevelDelay, setLoadLevelDelay] = useState(1);
@@ -47,7 +48,23 @@ export function Map({data}: any) {
             clearTimeout(timer);
         };
     }, []);
+    
 
+    const calculateStrokeWidth = (zoom_factor: number, selected: boolean): number => {
+
+        const STROKE_WIDTH_UNSELECTED_MOD = 0.00005;
+        const STROKE_WIDTH_SELECTED_MOD = 1;
+
+        
+        let selected_calc = STROKE_WIDTH_SELECTED_MOD /(zoom_factor)
+        let unselected_calc = STROKE_WIDTH_UNSELECTED_MOD * zoom_factor
+
+        if (selected) // Return 
+            return Math.max(selected_calc, unselected_calc)
+        else
+            return unselected_calc
+
+    }
 
     
 
@@ -90,6 +107,8 @@ export function Map({data}: any) {
 
 
     const [selectedRegion, setSelectedRegion] = useState("");
+    const selectedRegionRef = useRef(null)
+
 
     const mapRef = useRef(null);
     // 975, 610
@@ -128,7 +147,7 @@ export function Map({data}: any) {
 
 
         if (demographics === undefined) { // No people live here
-            return "white"
+            return "var(--color-gray-400)"//"white"
 
         } else {
             
@@ -159,11 +178,11 @@ export function Map({data}: any) {
 
 
     useEffect(() => {
-
         const current_xform = d3.zoomTransform(mapRef.current as any).k
+
         d3.select(gRef.current)
             .selectAll("path")
-            .attr("stroke-width", 0.5 / current_xform);
+            .attr("stroke-width", calculateStrokeWidth(current_xform, false));
 
         
         if (mouseCoord.x!=0 && mouseCoord.y!=0) {
@@ -186,7 +205,7 @@ export function Map({data}: any) {
                     
                 })
                 .attr("stroke", "black")
-                .attr("stroke-width", 0.5/8)
+                .attr("stroke-width", calculateStrokeWidth(current_xform, true))
                 .raise()
                 /*
 
@@ -227,14 +246,14 @@ export function Map({data}: any) {
         d3.select(new_region.parentNode)
             .selectAll("path")
             .attr("stroke", "var(--color-gray-400)")
-            .attr("stroke-width", 0.5 / current_xform);
+            .attr("stroke-width", calculateStrokeWidth(current_xform, false));
 
         d3.select(new_region).raise() // Show it first
         d3.select(new_region)
             .attr("stroke",  "black")
-            .attr("stroke-width", 1 / current_xform) // 2
+            .attr("stroke-width", calculateStrokeWidth(current_xform, true) ) // 2
         
-        
+        selectedRegionRef.current = region.properties.name
         setSelectedRegion(region.properties.name)
         setSelectedRegionEthnicity(region.properties.demographics)
 
@@ -246,11 +265,16 @@ export function Map({data}: any) {
 
         const current_xform = d3.zoomTransform(mapRef.current as any).k
 
-        if (name == selectedRegion)
+        const is_mobile = typeof window !== 'undefined' && window.innerWidth < 768; // Tailwind logic
+
+        if (name == selectedRegionRef.current && !is_mobile) {
             setSelectedRegion("")
+            //selectedRegionRef.current = null
+
+        }
         d3.select(event.target)
             .attr("stroke",  "var(--color-gray-400)")
-            .attr("stroke-width", 0.5 / current_xform)
+            .attr("stroke-width", calculateStrokeWidth(current_xform, false))
     }
 
 
@@ -324,7 +348,8 @@ export function Map({data}: any) {
                 d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
                 onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
-                onClick={()=>{
+                onClick={(e)=>{
+                    updateRegion(region, e)
                     setToggleStatsTab(true)
                     setDisplayedRegionStats(region.properties.demographics)
                     }
@@ -350,7 +375,8 @@ export function Map({data}: any) {
                 d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
                 onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
-                onClick={()=>{
+                onClick={(e)=>{
+                    updateRegion(region, e)
                     setToggleStatsTab(true)
                     setDisplayedRegionStats(region.properties.demographics)
                     }
@@ -376,7 +402,8 @@ export function Map({data}: any) {
                 d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
                 onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
-                onClick={()=>{
+                onClick={(e)=>{
+                    updateRegion(region, e)
                     setToggleStatsTab(true)
                     setDisplayedRegionStats(region.properties.demographics)
                     }
@@ -404,7 +431,8 @@ export function Map({data}: any) {
                 d={pathGenerator(region) ?? undefined}
                 onMouseEnter={(e)=>updateRegion(region, e)}
                 onMouseLeave={(e)=>removeRegion(region.properties.name, e)}
-                onClick={()=>{
+                onClick={(e)=>{
+                    updateRegion(region, e)
                     setToggleStatsTab(true)
                     setDisplayedRegionStats(region.properties.demographics)
                     }
@@ -415,7 +443,7 @@ export function Map({data}: any) {
 
 
     const generateDemoTable = (demo: Demographics) => {
-        return <div className="select-text">
+        return <div className="select-text ">
             <div className="my-1" >
                 <span className="font-bold text-lg text-gray-600">Population </span> { (demo.total).toLocaleString() }
             </div>
@@ -469,10 +497,10 @@ export function Map({data}: any) {
 
             {!toggleStatsTab ? <></> : 
             <div>
-                <div className= "md:block hidden absolute bottom-3 right-3 w-1/3 rounded-sm ">
-                        <div className=" bg-gray-600/100 ml-5  px-5 pt-3  text-gray-100 ">
+                <div className= "md:block hidden absolute bottom-3 right-3 w-4/13 shadow-sm/75 ">
+                        <div className=" bg-gray-600/100   px-5 pt-3   text-gray-100 ">
                             <div 
-                                className="absolute right-0 pr-5 text-4xl font-[Arial] cursor-pointer"
+                                className="absolute right-0 pr-5 text-4xl font-[Arial] cursor-pointer hover:text-red-300"
                                 onClick={()=>setToggleStatsTab(false)}
                             >✖</div>
                             
@@ -482,7 +510,7 @@ export function Map({data}: any) {
                         
 
                         </div>
-                        <div className=" bg-gray-300/100 ml-5  px-5 pt-3 pb-6 text-black ">
+                        <div className=" bg-gray-300/100  px-5 pt-3 pb-6 text-black ">
                             { displayedRegionStats && (generateDemoTable(displayedRegionStats)) }
                         </div>
                 </div>
@@ -569,7 +597,7 @@ export function Map({data}: any) {
                     </div>
             </div>}
 
-            <div className="h-full bg-gray-100 cursor-grab active:cursor-grabbing" onMouseMove={updateMouse}>
+            <div className="h-full bg-gray-400 cursor-grab active:cursor-grabbing" onMouseMove={updateMouse}>
             
                 <svg className="" ref={mapRef} viewBox="0 0 975 610" height="100%" width="100%" > 
                     <g ref={gRef} >

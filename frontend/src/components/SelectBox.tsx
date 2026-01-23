@@ -49,9 +49,8 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
   const CustomMenu = (props: any) => {
     return (
       <components.Menu {...props}>
-        <div className=" flex text-center cursor-pointer sticky  bg-gray-500 gap-0"
+        <div className=" flex text-center cursor-pointer sticky bg-gray-500 gap-0 text-sm italic"
             onTouchEnd={(e)=>e.stopPropagation()}
-            
             >
             
           { 
@@ -94,7 +93,7 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
       
         components={{ Menu:CustomMenu, Option:CustomOption }}
         isSearchable={true}
-        className="text-sm hidden x md:block"
+        className="text-md hidden x md:block"
         options={ displayList }
         defaultValue={options[0]}
         closeMenuOnSelect={true} 
@@ -105,7 +104,7 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
       
         components={{ Menu:CustomMenu, Option:CustomOption }}
         isSearchable={false}
-        className="text-sm md:hidden x block"
+        className="text-md md:hidden x block"
         options={ displayList }
         defaultValue={options[0]}
         closeMenuOnSelect={true} 

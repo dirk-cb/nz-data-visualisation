@@ -37,12 +37,12 @@ export function Header({ onShowAbout }: HeaderProps) {
         {hamburger && 
             <div className="absolute w-full top-full bg-gray-200 w-30 ">
                 <div className="px-7 self-end cursor-pointer hover:text-gray-300 hover:underline p-2" onClick={() => {
-                    setHamburger(false)
-                    onShowAbout(false)
+                    setHamburger(false);
+                    onShowAbout(false);
                 }}>Home</div>
                 <div className="px-7 self-end cursor-pointer p-2" onClick={() => {
-                    setHamburger(false)
-                    onShowAbout(true)
+                    setHamburger(false);
+                    onShowAbout(true);
                 }}>About</div>
             </div>
         }

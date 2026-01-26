@@ -1,51 +1,24 @@
 import { useState, useMemo } from 'react';
 import Select, { components } from 'react-select';
-import { type SelectOption } from "../domain/FeatureEthnicity"
 import * as Popover from '@radix-ui/react-popover';
 import { Settings } from 'lucide-react'
-
+import { DEMOGRAPHIC_LIST } from '../constants/DemographicOptions';
+import { type MapLevelSettings } from '../domain';
 
 export const TabbedDemographicSelect = ({setValueSelected}: any) => {
 
   const [tab, setTab] = useState("All");
-
-
-  const options: SelectOption[] = [
-      { value: "asian", label: "Asian", cat: "Ethnicity"},
-      { value: "chinese", label: "Chinese", cat: "Ethnicity", suboption: true},
-      { value: "indian", label: "Indian", cat: "Ethnicity", suboption: true},
-      { value: "filipino", label: "Filipino", cat: "Ethnicity", suboption: true},
-      { value: "other_asian", label: "Other Asian", cat: "Ethnicity", suboption: true},
-      { value: "nz_european", label: "European", cat: "Ethnicity"},
-      { value: "mena", label: "MENA", cat: "Ethnicity"},
-      { value: "māori", label: "Māori", cat: "Ethnicity"},
-      { value: "pasifika", label: "Pasifika", cat: "Ethnicity"},
-      { value: "other_ethnicity", label: "Other", cat: "Ethnicity"},
-      { value: "no_religion", label: "No Religion", cat: "Religion"},
-      { value: "christian", label: "Christian", cat: "Religion"},
-      { value: "islam", label: "Islam", cat: "Religion"},
-      { value: "judaism", label: "Judaism", cat: "Religion"},
-      { value: "lgbt", label: "LGBT", cat: "Other"}
-    
-  ];
-
-  const categoryTabs = useMemo(()=>["All", ...new Set(options.map((r: any) => r.cat))], []);
-
-  
-    
-
+  const categoryTabs = useMemo(()=>["All", ...new Set(DEMOGRAPHIC_LIST.map((r: any) => r.cat))], []);
 
   const displayList = useMemo(()=>{
 
     if (tab == "All")
-      return options
+      return DEMOGRAPHIC_LIST;
     else
-      return options.filter((row: any)=>row.cat == tab)
-
+      return DEMOGRAPHIC_LIST.filter((row: any)=>row.cat == tab);
 
   }, [tab])
 
-  
   const CustomMenu = (props: any) => {
     return (
       <components.Menu {...props}>
@@ -95,7 +68,7 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
         isSearchable={true}
         className="text-md hidden x md:block"
         options={ displayList }
-        defaultValue={options[0]}
+        defaultValue={DEMOGRAPHIC_LIST[0]}
         closeMenuOnSelect={true} 
         blurInputOnSelect={false}
         onChange={(v: any)=>setValueSelected(v.label)}
@@ -106,7 +79,7 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
         isSearchable={false}
         className="text-md md:hidden x block"
         options={ displayList }
-        defaultValue={options[0]}
+        defaultValue={DEMOGRAPHIC_LIST[0]}
         closeMenuOnSelect={true} 
         blurInputOnSelect={false}
         onChange={(v: any)=>setValueSelected(v.label)}
@@ -120,7 +93,7 @@ export const TabbedDemographicSelect = ({setValueSelected}: any) => {
 
 export const ToggleZoom = ({ zoomSetting, setZoomSetting } : any) => {
 
-  const options = ["Default", "Regions", "Territorial", "SA3", "SA2"]
+  const options: MapLevelSettings[] = ["Default", "Regions", "Territorial", "SA3", "SA2"];
 
   const [open, setOpen] = useState(false );
 

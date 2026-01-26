@@ -8,13 +8,11 @@ const fetchCensusData = async (filename: string): Promise<any[]> => {
 
     let res =  await fetch(url);
     
-    return await res.json()
+    return await res.json();
 
 }
 
 export const getMapData = async() => {
-
-    
 
     const promises = FILENAMES.map(async (f) => {
         const data = await fetchCensusData(f);
@@ -22,8 +20,6 @@ export const getMapData = async() => {
     });
 
     const entries = await Promise.all(promises);
-
-
 
     return Object.fromEntries(entries);
 }
